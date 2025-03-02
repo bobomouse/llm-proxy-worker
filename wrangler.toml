@@ -1,0 +1,22 @@
+name = "llm-proxy-worker"
+main = "worker.js"
+compatibility_date = "2023-05-18"
+
+# 如需使用KV存储额外配置或缓存，取消下面的注释并执行 `wrangler kv:namespace create LLM_PROXY_KV`
+# [[kv_namespaces]]
+# binding = "LLM_PROXY_KV"
+# id = "替换为您的KV命名空间ID"
+
+# 如需使用环境变量存储API密钥，可以取消下面的注释
+# [vars]
+# OPENAI_API_KEY = ""
+# ANTHROPIC_API_KEY = ""
+# GEMINI_API_KEY = ""
+# GROQ_API_KEY = ""
+
+# 定义环境(可选)
+# [env.production]
+# 生产环境特定配置...
+
+# [env.development]
+# 开发环境特定配置... 
