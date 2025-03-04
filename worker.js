@@ -14,8 +14,12 @@ addEventListener('fetch', event => {
 });
 
 async function handleRequest(request) {
+  // Add logging
+  console.log(`Incoming request to: ${request.url}`);
+  
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request');
     return handleCORS(request);
   }
   
@@ -26,6 +30,7 @@ async function handleRequest(request) {
   if (pathParts.length > 0 && LLM_ENDPOINTS[pathParts[0]]) {
     const provider = pathParts[0];
     const targetEndpoint = LLM_ENDPOINTS[provider];
+    console.log(`Proxying request to ${provider} at ${targetEndpoint}`);
     
     // Remove the provider prefix from the path
     const newPathname = '/' + pathParts.slice(1).join('/');
@@ -36,16 +41,30 @@ async function handleRequest(request) {
     targetUrl.search = url.search;
     
     // Clone the request and modify it for the target API
+    const cleanedHeaders = new Headers();
+    for (const [key, value] of request.headers) {
+      // Skip Cloudflare-specific headers and other headers we want to clean
+      if (!key.toLowerCase().startsWith('cf-') && 
+          !['x-real-ip', 'x-forwarded-for', 'x-forwarded-proto', 
+            'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-scheme',
+            'x-forwarded-ssl', 'cdn-loop'].includes(key.toLowerCase())) {
+        cleanedHeaders.set(key, value);
+      }
+    }
+    
     const modifiedRequest = new Request(targetUrl.toString(), {
       method: request.method,
-      headers: new Headers(request.headers),
+      headers: cleanedHeaders,
       body: request.body,
       redirect: 'follow'
     });
     
     // Forward the request to the appropriate LLM API
     try {
+      console.log('Forwarding request with cleaned headers:', 
+                  JSON.stringify(Object.fromEntries(cleanedHeaders.entries()), null, 2));
       const response = await fetch(modifiedRequest);
+      console.log(`Response received with status: ${response.status}`);
       
       // Create a new response with CORS headers
       const modifiedResponse = new Response(response.body, {
@@ -60,11 +79,13 @@ async function handleRequest(request) {
       
       return modifiedResponse;
     } catch (error) {
+      console.error(`Error proxying request to ${provider}:`, error);
       return new Response(`Error proxying request to ${provider}: ${error.message}`, { status: 500 });
     }
   }
   
   // If no valid provider is specified in the path
+  console.log('Invalid provider path requested');
   return new Response('Invalid LLM provider path. Use /provider/api/path format.', { status: 400 });
 }
 
