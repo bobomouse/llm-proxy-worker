@@ -1,8 +1,5 @@
 {
-  "functions": {
-    "worker.js": {
-      "timeout": 30,
-      "fluid": true
-    }
-  }
+  "rewrites":  [
+    {"source": "/(.*)", "destination": "/"}
+  ]
 }
