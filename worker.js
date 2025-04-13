@@ -9,11 +9,9 @@ const LLM_ENDPOINTS = {
   // Add more providers as needed
 };
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
+exports.handler = async (event) => {
+  const request = event.request;
+  
   // Add logging
   console.log(`Incoming request to: ${request.url}`);
   
@@ -77,17 +75,17 @@ async function handleRequest(request) {
       modifiedResponse.headers.set('Access-Control-Allow-Origin', request.headers.get('Origin') || '*');
       modifiedResponse.headers.set('Access-Control-Allow-Credentials', 'true');
       
-      return modifiedResponse;
+      return { statusCode: response.status, body: await response.text(), headers: Object.fromEntries(modifiedResponse.headers.entries()) };
     } catch (error) {
       console.error(`Error proxying request to ${provider}:`, error);
-      return new Response(`Error proxying request to ${provider}: ${error.message}`, { status: 500 });
+      return { statusCode: 500, body: `Error proxying request to ${provider}: ${error.message}` };
     }
   }
   
   // If no valid provider is specified in the path
   console.log('Invalid provider path requested');
-  return new Response('Invalid LLM provider path. Use /provider/api/path format.', { status: 400 });
-}
+  return { statusCode: 400, body: 'Invalid LLM provider path. Use /provider/api/path format.' };
+};
 
 function handleCORS(request) {
   // Handle CORS preflight requests
@@ -99,8 +97,5 @@ function handleCORS(request) {
     'Access-Control-Max-Age': '86400'
   };
   
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders
-  });
-} 
+  return { statusCode: 204, headers: corsHeaders };
+}
