@@ -1,14 +1,8 @@
 {
-  "builds": [
-    {
-      "src": "worker.js",
-      "use": "@vercel/node"
+  "functions": {
+    "worker.js": {
+      "timeout": 30,
+      "fluid": true
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/worker.js"
-    }
-  ]
+  }
 }
