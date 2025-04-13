@@ -9,9 +9,8 @@ const LLM_ENDPOINTS = {
   // Add more providers as needed
 };
 
-exports.handler = async (event) => {
-  const request = event.request;
-  
+// Vercel expects a default export that is a function
+export default async (request, context) => {
   // Add logging
   console.log(`Incoming request to: ${request.url}`);
   
